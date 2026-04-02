@@ -84,19 +84,36 @@ def query_generator(state:AgentState):
             return {
                 "error":"Message doest not exist"
             }
-        prompt = f"""You are a PostgreSQL expert. Write ONE efficient  query.
-                Rules:
-                - Use WHERE, LIMIT, GROUP BY, and date filters aggressively — the tables have 5000+ rows
-                - Never SELECT * on large tables — name only the columns you need
-                - Use CTEs for complex logic
-                - Return ONLY the SQL, nothing else
-                - Always name the columns using AS
-                
-                Schema:
-                {state["db_context"]}
-                
-                Question: {state['user_input']}
-                """
+        prompt = f"""
+You are a Microsoft SQL Server (T-SQL) expert specialized in Data Warehousing.
+
+Write ONE efficient SQL Server query.
+
+Rules:
+- Use proper T-SQL syntax (SQL Server compatible)
+- Use WHERE filters early to reduce scanned data (especially on fact tables)
+- Always use TOP instead of LIMIT
+- Always schema-qualify tables (e.g., dbo.FactSales, dbo.DimDate)
+- NEVER use SELECT * — explicitly select only required columns
+- Use clear and meaningful aliases for tables and columns
+- Use AS to name ALL output columns
+- Use CTEs (WITH clause) for complex transformations
+- Use appropriate JOINs between fact and dimension tables (star/galaxy schema)
+- Prefer INNER JOIN unless missing data is expected (then use LEFT JOIN)
+- Aggregate only when necessary and always use GROUP BY correctly
+- When filtering by date, use indexed date keys or date columns efficiently
+- Avoid unnecessary subqueries — prefer CTEs or joins
+- Ensure query is optimized for large datasets (5000+ rows, typically much larger in DW)
+
+Schema:
+{state["db_context"]}
+
+Question:
+{state["user_input"]}
+
+Output:
+Return ONLY the SQL Server query. No explanations, no comments.
+"""
         SystemPrompt = {
             "messages":[SystemMessage(content=prompt), HumanMessage(state['user_input'])]
         }
