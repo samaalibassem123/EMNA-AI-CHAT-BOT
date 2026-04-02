@@ -14,17 +14,16 @@ def intent_classification(state: AgentState):
     try:
         user_input = state["user_input"]
         prompt = f"""
-        You are an intent classification system for a data warehouse assistant.
+        You are an intent classification system for an assistant.
 
         Your job is to classify the user input into ONLY ONE label:
 
-        - "chat": greetings, explanations, opinions, general questions, or conversations that do NOT require data warehouse access.
-        - "database": any request that involves retrieving, filtering, listing, analyzing, or querying structured data from the data warehouse (e.g. employee metrics, HR KPIs, attendance reports, organizational hierarchies, workforce analytics).
+        - "chat": greetings, explanations, opinions, general questions, or conversations that do NOT require database access.
+        - "database": any request that involves retrieving, filtering, listing, updating, or querying structured data (e.g. employees, users, orders, reports).
 
         IMPORTANT RULES:
-        - If the user asks to "show", "list", "get", "find", "display", "retrieve", "analyze", "report on", "calculate", "measure", or "evaluate" data → classify as "database"
-        - If the request mentions dimensional data like employees, departments, locations, time periods, HR metrics, KPIs, trends → likely "database"
-        - If the request mentions fact data (transactions, events, headcount, attendance, salary records) → definitely "database"
+        - If the user asks to "show", "list", "get", "find", "display", or "retrieve" data → classify as "database"
+        - If the request mentions business entities like employees, customers, orders, sales, KPIs → likely "database"
         - If the request is conceptual or conversational → "chat"
 
         OUTPUT RULE:
@@ -38,17 +37,14 @@ def intent_classification(state: AgentState):
         Input: Explain what a KPI is
         Output: chat
 
-        Input: Show me employee metrics by department
+        Input: Show me all employees
         Output: database
 
-        Input: Get headcount trends for the last quarter
+        Input: Get users who signed up last week
         Output: database
 
-        Input: What is dimensional modeling?
+        Input: Can you help me understand SQL joins?
         Output: chat
-
-        Input: Calculate average salary by location
-        Output: database
 
         Now classify:
 
@@ -88,32 +84,18 @@ def query_generator(state:AgentState):
             return {
                 "error":"Message doest not exist"
             }
-        prompt = f"""You are a T-SQL expert specializing in Data Warehouse querying with star/galaxy schema.
-
-                Context:
-                - Target: Microsoft SQL Server
-                - Schema: Star/Galaxy Schema with Fact and Dimension tables
-                - Dimension tables contain descriptive attributes (Employee, Department, Location, Time, etc.)
-                - Fact tables contain measurable events (Attendance, Salary, Performance, etc.)
-
-                Strict Rules:
-                - Write T-SQL syntax (use CAST, CONVERT, DATEFROMPARTS for date handling)
-                - Use INNER/LEFT JOINs to connect Facts → Dimensions properly
-                - Use WHERE clauses aggressively with date filters (CONVERT(DATE, ...) or CAST)
-                - Use GROUP BY for dimensional aggregations
-                - Use TOP or OFFSET/FETCH for row limiting (not LIMIT)
-                - For hierarchical queries use CTE or Window Functions (ROW_NUMBER, RANK, SUM OVER)
-                - Never SELECT * — always specify explicit columns with meaningful aliases
-                - Return ONLY the SQL in a single code block, nothing else
-                - Always alias columns with meaningful names using AS
-                - Assume tables are in [dbo] schema if not specified
+        prompt = f"""You are a PostgreSQL expert. Write ONE efficient  query.
+                Rules:
+                - Use WHERE, LIMIT, GROUP BY, and date filters aggressively — the tables have 5000+ rows
+                - Never SELECT * on large tables — name only the columns you need
+                - Use CTEs for complex logic
+                - Return ONLY the SQL, nothing else
+                - Always name the columns using AS
                 
-                Available Schema:
+                Schema:
                 {state["db_context"]}
                 
-                User Question: {state['user_input']}
-                
-                Generate ONE efficient T-SQL query:
+                Question: {state['user_input']}
                 """
         SystemPrompt = {
             "messages":[SystemMessage(content=prompt), HumanMessage(state['user_input'])]
@@ -162,26 +144,11 @@ def execute_query(state:AgentState, session:Session):
         print("query result : " , query_result)
         return {
             "query_result":query_result
-        You are a professional data warehouse analyst handling an error gracefully.
-        
-        Context:
-        - Error Type: Query or Data Warehouse Access Error
-        - User tried to query the HR data warehouse
-        
-        Write a professional, empathetic error message that:
-        1. Explains what went wrong (without technical jargon if possible)
-        2. Suggests what they should try instead
-        3. Maintains data security by not exposing schema details
-        
-        Error Details:
-        - Safety Status: {query_is_safe}
-        - Technical Context: {error}
-        - Original Request: {state['user_input']}
-        
-        Examples of professional responses:
-        - "I cannot modify or delete data from the warehouse. I can only retrieve and analyze existing data."
-        - "The requested dimension table isn't accessible for this analysis. Let me suggest an alternative approach..."
-        - "That query would be too resource-intensive. Try narrowing down the date range or adding more filters."
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "error":e,
             "query_result":"found nothing"
         }
 
@@ -198,36 +165,22 @@ def handle_error(state:AgentState):
         Query safety : {query_is_safe}
     '''
     SystemPrompt = {
-        "messages": [HR Data Warehouse Analyst. Write a professional, dimensional-aware Markdown report.
-        
-        Context:
-        - Data Source: HR Data Warehouse (Star/Galaxy Schema)
-        - Report Type: Dimensional Analysis
-        - Audience: HR Leadership and Business Users
-        
-        Report Structure:
-        1. **Executive Summary** (2-3 sentences): State the key findings and business impact
-        2. **Key Findings** (bullet points): 
-           - Highlight dimensional insights (trends by department, location, employee level)
-           - Call out significant metrics and KPIs
-           - Note any anomalies or patterns
-        3. **Dimensional Breakdown** (table): Show results by relevant dimensions
-        4. **T-SQL Query** (code block): Show the query used with schema notation
-        5. **Recommendations** (bullet points): Suggest next steps or drill-down analysis
-        
-        Analysis Best Practices:
-        - Reference dimension hierarchies if relevant (e.g., "by Department → Team → Location")
-        - Compare metrics across time periods or segments
-        - Highlight fact table metrics vs dimension attributes
-        
-        Original question: {state["user_input"]}
-        
-        T-SQL Query Used:
-        ```sql
-        {state['sql_query']}
-        ```
-        
-        Data Resultsanalyst. Write a professional Markdown report.
+        "messages": [
+            SystemMessage(content=prompt),
+            HumanMessage(state['user_input'])
+        ]
+    }
+    response = rh_agent.invoke(SystemPrompt)
+
+    return {
+        "messages":state["messages"] + [response["messages"][-1]]
+    }
+
+
+def generate_response(state:AgentState):
+
+    prompt = f"""
+        You are a senior data analyst. Write a professional Markdown report.
         
         Include:
         1. Executive summary (2-3 sentences)
