@@ -10,7 +10,7 @@ engine = create_engine(
     pool_pre_ping=True,  # important for SQL Server
 )
 
-SessionLocal = sessionmaker(
+session = sessionmaker(
     bind=engine,
     autoflush=False,
     autocommit=False,

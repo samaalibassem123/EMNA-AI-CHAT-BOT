@@ -30,10 +30,3 @@ gemini3_flash_cloud_llm = ChatOllama(
     temperature=0
 )
 
-
-# google
-google_llm = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview",
-    api_key=settings.GOOGLE_AI_KEY,
-    temperature=0
-)

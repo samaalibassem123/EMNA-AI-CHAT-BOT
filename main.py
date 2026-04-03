@@ -7,6 +7,24 @@ from sqlalchemy.orm import Session
 from core.database.sync_db import session
 from rh_agent.graph import generate_stream
 
+
+
+
+import pyodbc
+print("AVAILABLE DRIVERS ++++++",pyodbc.drivers())
+
+
+# Database connection test
+conn = pyodbc.connect(
+    "DRIVER={ODBC Driver 17 for SQL Server};"
+    "SERVER=localhost\\MSSQLSERVER01;"
+    "DATABASE=Datawarehouse;"
+    "Trusted_Connection=yes;"
+    "TrustServerCertificate=yes;"
+)
+
+print("DB Connected !")
+
 st.set_page_config(page_title="AI Chat Bot", page_icon="🤖")
 st.title("🤖 AI Chat Bot - Powered by LangGraph")
 

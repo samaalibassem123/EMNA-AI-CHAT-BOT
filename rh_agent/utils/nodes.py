@@ -71,7 +71,22 @@ def intent_classification(state: AgentState):
         return {"error":e, "intent":"chat"}
 
 def schema_inspector(state:AgentState, session:Session):
-    context = get_table_context(session,["employees","departments","employee_attendance_event","attendance_events","attendance"])
+    context = get_table_context(session,tables = [
+    "Dim_Gouverment",
+    "Dim_District",
+    "Dim_Delegation",
+    "Dim_Genre",
+    "Dim_Milieu",
+    "Dim_Age",
+    "Dim_Année",
+    "Dim_Niveau",
+    "Dim_SecteurActivite",
+    "Dim_RaisonMigration",
+    "Fait_Education",
+    "Fait_Emploi",
+    "Fait_Migration"
+]
+)
     print(context)
     return {
         "db_context":context

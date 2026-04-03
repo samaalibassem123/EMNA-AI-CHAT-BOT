@@ -1,0 +1,4 @@
+SELECT TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE = 'BASE TABLE'
+  AND TABLE_CATALOG = 'DatawareHouse'; -- optional, if connected to another DB

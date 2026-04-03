@@ -1,5 +1,5 @@
 from langchain.agents import create_agent
-from llms.models import gemma3_1b_llm, qwen2_5_3b_llm, gemini3_flash_cloud_llm, google_llm
+from llms.models import gemma3_1b_llm, qwen2_5_3b_llm, gemini3_flash_cloud_llm
 
 SYSTEM_PROMPT = '''
             You are an HR (RH) Data Warehouse Analyst Assistant.
