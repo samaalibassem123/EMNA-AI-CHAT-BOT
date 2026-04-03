@@ -71,7 +71,7 @@ def intent_classification(state: AgentState):
         return {"error":e, "intent":"chat"}
 
 def schema_inspector(state:AgentState, session:Session):
-    context = get_table_context(session,tables = [
+    context = get_table_context(session,table_names = [
     "Dim_Gouverment",
     "Dim_District",
     "Dim_Delegation",
@@ -145,7 +145,7 @@ Return ONLY the SQL Server query. No explanations, no comments.
         return {"error":str(e)}
 
 
-async def validate_query(state:AgentState):
+def validate_query(state:AgentState):
     sql = state['sql_query'].strip().upper()
 
     forbidden = ["INSERT", "UPDATE", "DELETE", "DROP", "TRUNCATE", "ALTER", "CREATE", "GRANT"]
@@ -205,7 +205,7 @@ def handle_error(state:AgentState):
     response = rh_agent.invoke(SystemPrompt)
 
     return {
-        "messages":state["messages"] + [response["messages"][-1]]
+        "messages":state["messages"] + [{"role": "assistant", "content": response["messages"][-1].content}]
     }
 
 
@@ -240,7 +240,7 @@ def generate_response(state:AgentState):
     llm_response = rh_agent.invoke(SystemPrompt)
 
     return {
-        "messages":state["messages"] + [llm_response["messages"][-1]]
+        "messages":state["messages"] + [{"role": "assistant", "content": llm_response["messages"][-1].content}]
     }
 
 def chat_node(state: AgentState):
@@ -249,7 +249,7 @@ def chat_node(state: AgentState):
     })
 
     return {
-        "messages":state["messages"]+ [result["messages"][-1]]
+        "messages":state["messages"]+ [{"role": "assistant", "content": result["messages"][-1].content}]
     }
 
 

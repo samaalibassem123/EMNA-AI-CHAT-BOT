@@ -80,15 +80,33 @@ NODE_LABELS = {
 
 
 def _extract_text(value: Any) -> str:
+    """Extract text from various formats, handling non-serializable objects."""
     if value is None:
         return ""
     if isinstance(value, str):
         return value
     if isinstance(value, dict):
+        # Special handling for messages list - only extract the last message
+        if "messages" in value and isinstance(value["messages"], list) and value["messages"]:
+            last_msg = value["messages"][-1]
+            return _extract_text(last_msg)
+        
         for key in ("content", "text", "output", "response"):
             if key in value and value[key]:
-                return str(value[key])
-        return json.dumps(value, ensure_ascii=False)
+                return _extract_text(value[key])
+        # Try to convert dict to serializable form
+        try:
+            return json.dumps(value, ensure_ascii=False, default=str)
+        except (TypeError, ValueError):
+            return str(value)
+    # Handle lists
+    if isinstance(value, list):
+        try:
+            texts = [_extract_text(item) for item in value]
+            return " ".join(filter(None, texts))
+        except Exception:
+            return str(value)
+    # For any non-serializable object (like HumanMessage), convert to string
     return str(value)
 
 

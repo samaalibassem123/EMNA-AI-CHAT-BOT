@@ -22,11 +22,11 @@ qwen2_5_3b_llm = ChatOllama(
 
 gemini3_flash_cloud_llm = ChatOllama(
     model="gemini-3-flash-preview:cloud",
+    base_url="https://ollama.com",           # Correct base URL
     client_kwargs={
         "headers": {
             "Authorization": f"Bearer {settings.OLLAMA_API_KEY}"
         }
     },
-    temperature=0
+    temperature=0,
 )
-
