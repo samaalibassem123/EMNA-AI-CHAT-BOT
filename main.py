@@ -14,7 +14,7 @@ def get_db_session():
     return db
 
 st.set_page_config(page_title="AI Chat Bot", page_icon="🤖")
-st.title("🤖 AI Chat Bot - Powered by LangGraph")
+st.title("🤖 OTBS AI Chat Bot Assistant ")
 
 # 1) Session memory
 if "messages" not in st.session_state:
